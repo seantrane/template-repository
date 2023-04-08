@@ -70,8 +70,7 @@
   - 'status: blocked'
 - name: 'state: pending'
   color: fbca04
-  description: Taking action, but need a few things to happen first. A feature that
-    needs dependencies merged, or a bug that needs further data.
+  description: Pending requirements, dependencies, data, or more information.
   aliases:
   - in progress
   - on hold
@@ -81,8 +80,8 @@
   - watchlist
 - name: 'state: inactive'
   color: e6e6e6
-  description: No action needed or possible. The issue is either fixed, addressed
-    better by other issues, or just out of product scope.
+  description: No action needed or possible. The issue is fixed, addressed elsewhere,
+    or out of scope.
   aliases:
   - duplicate
   - invalid
@@ -100,8 +99,8 @@
   - 'Type: Bug'
 - name: 'type: chore'
   color: fef2c0
-  description: Converting measurements, reorganizing folder structure, and other necessary
-    (but less impactful) tasks.
+  description: Converting measurements, reorganizing folder structure, and less impactful
+    tasks.
   aliases:
   - chore
   - dependabot
