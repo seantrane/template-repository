@@ -18,14 +18,14 @@ permissions:
 jobs:
   labelsync:
     # https://github.com/seantrane/github-label-presets
-    name: GitHub Label Presets
+    name: GitHub Label Presets, Sync
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: GitHub Label Sync
+      - name: github-label-sync
         id: githublabelsync
         run: |
           npm i -g github-label-sync
@@ -36,14 +36,3 @@ jobs:
           LABEL_CONFIG_PATH: ./.github/labels.json
           # Use github-label-presets:
           # LABEL_CONFIG_PATH: https://git.io/fAe5i
-        continue-on-error: true
-      - name: GitHub Label Sync Output Summary
-        run: |
-          echo "### GitHub Label Sync" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          echo "${{ steps.githublabelsync.outputs.stdout }}" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-        continue-on-error: true
-      - name: GitHub Label Sync Status
-        if: steps.githublabelsync.outcome == 'failure'
-        run: exit 1
