@@ -8,32 +8,42 @@ on:
     types: [created, edited, deleted]
   push:
     branches: [master, main]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+  repository-projects: write
 
 jobs:
-  # labels:
-  #   # https://github.com/marketplace/actions/issue-label-manager-action
-  #   name: Label Manager
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - uses: lannonbr/issue-label-manager-action@4.0.0
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       # with:
-  #       #   delete: true # will delete any labels that aren't in the .github/labels.json (this is set to false by default)
-
   labelsync:
-    # https://github.com/micnncim/action-label-syncer
-    # https://github.com/micnncim/action-label-syncer/pull/68
-    name: Label Sync
+    # https://github.com/seantrane/github-label-presets
+    name: GitHub Label Presets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: micnncim/action-label-syncer@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v3
         with:
-          manifest: .github/labels.yml
-          # repository: |
-          #     owner/repository-1
-          #     owner/repository-2
+          node-version: 16
+      - name: GitHub Label Sync
+        id: githublabelsync
+        run: |
+          npm i -g github-label-sync
+          github-label-sync -l "$LABEL_CONFIG_PATH" "$LABEL_REPOSITORY"
+        env:
+          GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LABEL_REPOSITORY: ${{ github.repository }}
+          LABEL_CONFIG_PATH: ./.github/labels.json
+          # Use github-label-presets:
+          # LABEL_CONFIG_PATH: https://git.io/fAe5i
+        continue-on-error: true
+      - name: GitHub Label Sync Output Summary
+        run: |
+          echo "### GitHub Label Sync" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.githublabelsync.outputs.stdout }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+      - name: GitHub Label Sync Status
+        if: steps.githublabelsync.outcome == 'failure'
+        run: exit 1
