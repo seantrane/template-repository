@@ -1,0 +1,335 @@
+version: '3.5'
+# https://docs.docker.com/compose/compose-file/
+# https://docs.docker.com/compose/reference/overview/
+services:
+
+  # ----------------------------------------------------------------------------
+  # Core Services
+  # ----------------------------------------------------------------------------
+
+  # cassandra:
+  #   image: template-repository-cassandra:latest
+  #   container_name: template-repository-cassandra
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/cassandra
+  #   volumes:
+  #     - ./services/cassandra/._cassandra-data:/var/lib/cassandra
+  #     - ./services/cassandra/cassandra.yaml:/etc/cassandra/cassandra.yaml
+  #   expose:
+  #     - 7000
+  #   ports:
+  #     - "7000:7000"
+  #   networks:
+  #     - backend
+
+  # Elasticsearch, single-node development configuration...
+  # elasticsearch:
+  #   image: template-repository-elasticsearch:latest
+  #   container_name: template-repository-elasticsearch
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/elasticsearch
+  #   volumes:
+  #     - ./services/elasticsearch/.elasticsearch-data:/usr/share/elasticsearch/data
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   networks:
+  #     - backend
+  #   environment:
+  #     - discovery.type=single-node
+
+  # Elasticsearch, multi-node production configuration...
+  # elasticsearch01:
+  #   image: template-repository-elasticsearch:latest
+  #   container_name: template-repository-elasticsearch01
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/elasticsearch
+  #   volumes:
+  #     - ./services/elasticsearch/.elasticsearch-data01:/usr/share/elasticsearch/data
+  #   ports:
+  #     - "9200:9200"
+  #     - "9300:9300"
+  #   networks:
+  #     - backend
+  #   environment:
+  #     - node.name=elasticsearch01
+  #     - cluster.name=template-repository-elasticsearch-cluster
+  #     - discovery.seed_hosts=elasticsearch02,elasticsearch03
+  #     - cluster.initial_master_nodes=elasticsearch01,elasticsearch02,elasticsearch03
+  #     - bootstrap.memory_lock=true
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  # elasticsearch02:
+  #   image: template-repository-elasticsearch:latest
+  #   container_name: template-repository-elasticsearch02
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/elasticsearch
+  #   volumes:
+  #     - ./services/elasticsearch/.elasticsearch-data02:/usr/share/elasticsearch/data
+  #   networks:
+  #     - backend
+  #   environment:
+  #     - node.name=elasticsearch02
+  #     - cluster.name=template-repository-elasticsearch-cluster
+  #     - discovery.seed_hosts=elasticsearch01,elasticsearch03
+  #     - cluster.initial_master_nodes=elasticsearch01,elasticsearch02,elasticsearch03
+  #     - bootstrap.memory_lock=true
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+  # elasticsearch03:
+  #   image: template-repository-elasticsearch:latest
+  #   container_name: template-repository-elasticsearch03
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/elasticsearch
+  #   volumes:
+  #     - ./services/elasticsearch/.elasticsearch-data03:/usr/share/elasticsearch/data
+  #   networks:
+  #     - backend
+  #   environment:
+  #     - node.name=elasticsearch03
+  #     - cluster.name=template-repository-elasticsearch-cluster
+  #     - discovery.seed_hosts=elasticsearch01,elasticsearch02
+  #     - cluster.initial_master_nodes=elasticsearch01,elasticsearch02,elasticsearch03
+  #     - bootstrap.memory_lock=true
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   ulimits:
+  #     memlock:
+  #       soft: -1
+  #       hard: -1
+
+  # mariadb:
+  #   image: template-repository-mariadb:latest
+  #   container_name: template-repository-mariadb
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/mysql
+  #     dockerfile: Dockerfile.mariadb
+  #   volumes:
+  #     - ./services/mysql/._mariadb:/data/db
+  #     - ./services/mysql/initdb:/docker-entrypoint-initdb.d
+  #   expose:
+  #     - 3306
+  #   ports:
+  #     - "3306:3306"
+  #   networks:
+  #     - backend
+  #   environment:
+  #     MYSQL_DATABASE: ${MYSQL_DATABASE:-example}
+  #     MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-example}
+  #     MYSQL_PASSWORD: ${MYSQL_DB_PASSWORD:-example}
+  #     MYSQL_USER: ${MYSQL_DB_USERNAME:-example}
+
+  mongo:
+    image: template-repository-mongo:latest
+    container_name: template-repository-mongo
+    restart: unless-stopped
+    build:
+      context: ./services/mongo
+    volumes:
+      - ./services/mongo/._mongo-data:/data/db
+    expose:
+      - 27017
+    ports:
+      - "27017:27017"
+    networks:
+      - backend
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USERNAME:-root}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD:-example}"
+
+  # nginx:
+  #   image: raps-nginx:latest
+  #   container_name: raps-nginx
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/nginx
+  #   depends_on:
+  #     - node-express-web
+  #   volumes:
+  #     - ./apps/webserver:/var/www
+  #     - ./services/nginx/conf:/etc/nginx/conf.d/
+  #   expose:
+  #     - 8000
+  #   ports:
+  #     - "8000:80"
+  #   networks:
+  #     - frontend
+
+  # rabbitmq:
+  #   image: template-repository-rabbitmq:latest
+  #   container_name: template-repository-rabbitmq
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/rabbitmq
+  #   volumes:
+  #     - ./services/rabbitmq/._rabbitmq:/var/lib/rabbitmq
+  #   expose:
+  #     - 5672
+  #   ports:
+  #     - "5672:5672"
+  #   networks:
+  #     - backend
+
+  redis:
+    image: template-repository-redis:latest
+    container_name: template-repository-redis
+    restart: unless-stopped
+    build:
+      context: ./services/redis
+    volumes:
+      - ./services/redis/._redis-data:/data
+    expose:
+      - 6379
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+  # solr:
+  #   image: template-repository-solr:latest
+  #   container_name: template-repository-solr
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./services/solr
+  #   volumes:
+  #     - ./services/solr/._solrdata:/var/solr
+  #   expose:
+  #     - 8983
+  #   ports:
+  #     - "8983:8983"
+  #   networks:
+  #     - backend
+
+  # ----------------------------------------------------------------------------
+  # App Services
+  # ----------------------------------------------------------------------------
+
+  node-express-web:
+    image: template-repository-node-express-web:latest
+    container_name: template-repository-node-express-web
+    restart: unless-stopped
+    build:
+      context: ./apps/node-express-web
+      dockerfile: Dockerfile
+      target: build
+      # Build variables.
+      # args:
+      #   WORK_DIR: /usr/src/app
+      #   VAR_NAME: value
+    # command: nodemon --inspect /usr/src/app/server.js
+    depends_on:
+      - mongo
+      - redis
+      # - api
+    env_file:
+      - ./apps/node-express-web/.env
+      # - ./apps/node-express-web/.localrc
+    # Runtime variables.
+    environment:
+      - REDIS_HOST=template-repository-redis
+      - MONGO_HOST=template-repository-mongo:27017
+    volumes:
+      # - ./apps/node-express-web:/usr/src/app
+      - ./mnt/symlink:/mnt/symlink
+    expose:
+      - 3000
+    ports:
+      - "3000:3000"
+    networks:
+      - frontend
+      - backend
+    # dns:
+    #   - 8.8.8.8
+    #   - 9.9.9.9
+    # dns_search:
+    #   - dc1.example.com
+    #   - dc2.example.com
+    # Populate /etc/hosts file with IP-host mappings.
+    # extra_hosts:
+    #   - somehost:162.242.195.82
+    #   - otherhost:50.31.209.229
+
+  # api:
+  #   image: template-repository-node-express-api:latest
+  #   container_name: template-repository-node-express-api
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./apps/node-express-api
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - mongo
+  #     - redis
+  #   env_file:
+  #     - ./apps/node-express-api/.env
+  #   #   - ./apps/node-express-api/.localrc
+  #   environment:
+  #     - REDIS_HOST=template-repository-redis
+  #     - MONGO_HOST=template-repository-mongo:27017
+  #   # volumes:
+  #   #   - ./apps/node-express-api/lib:/usr/src/app/lib
+  #   #   - ./apps/node-express-api/node_modules:/usr/src/app/node_modules
+  #   expose:
+  #     - 4200
+  #   ports:
+  #     - "4200:4200"
+  #   networks:
+  #     - frontend
+  #     - backend
+
+  # worker:
+  #   image: template-repository-worker:latest
+  #   container_name: template-repository-worker
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./apps/worker
+  #   env_file:
+  #     - ./apps/worker/.env
+  #   depends_on:
+  #     - redis
+  #     - mongo
+  #   environment:
+  #     - REDIS_HOST=template-repository-redis
+  #     - MONGO_HOST=template-repository-mongo:27017
+  #   expose:
+  #     - 6969
+  #   ports:
+  #     - "6969:6969"
+  #   networks:
+  #     - backend
+
+  # python-app:
+  #   image: template-repository-python-app:latest
+  #   container_name: template-repository-python-app
+  #   restart: unless-stopped
+  #   build:
+  #     context: ./apps/python-app
+  #   command: nodemon --watch template --exec "python" app.py
+  #   env_file:
+  #     - ./apps/worker/.env
+  #   depends_on:
+  #     - redis
+  #     - mongo
+  #   environment:
+  #     - REDIS_HOST=template-repository-redis
+  #   volumes:
+  #     — ./apps/python-app:/usr/src/app
+  #   ports:
+  #     — "5000:80"
+  #   networks:
+  #     — frontend
+  #     — backend
+
+networks:
+  frontend:
+  backend:

@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# https://github.com/docker-solr/docker-solr/blob/master/README.md
+# https://www.midnightcreative.io/coding/docker/docker-compose-health-check-for-apache-solr/
+
+# Apache Solr is considered healthy using the following steps to determine status:
+# * Solr includes an admin ping endpoint that shows the status of the core.
+# * Extract the status value from the returned JSON document.
+# * Check whether the status value equals to “ok” (case insensitive).
+# * Curl command can exit with codes other than 1 we make sure that
+#   the health check command will exit with the code 1 in case of failure.
+#   (Docker expects 0 for success and1 for failure.)
+
+curl -sf "http://localhost:${SOLR_PORT:-8983}/solr/${SOLR_CORE:-gettingstarted}/admin/ping?wt=json" | python -c "import sys, json; print json.load(sys.stdin)['status']" | grep -iq "ok" || exit 1

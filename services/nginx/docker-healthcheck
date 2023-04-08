@@ -1,0 +1,5 @@
+#!/bin/bash
+#
+# nginx health check
+
+service nginx status || exit 1

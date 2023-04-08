@@ -1,0 +1,543 @@
+################################################################################
+################################################################################
+#
+# BUILD STAGE
+#
+# "Shift-left" mindset; if any/all stages need it, then put it in "stage 0".
+#
+# Pack as many required tasks into as few RUN commands as possible.
+# This helps reduce the amount of overall layers, memory, etc.
+#
+# The build stage uses 3 RUN layers:
+#   1. Install global dependencies.
+#   2. Install app dependencies.
+#   3. Install, lint, build the app.
+#
+# The build stage is for installing and building "the app".
+#
+# Linters and style checks are run prior build tasks (fail-fast).
+#
+# ENTRYPOINT/CMD/HEALTHCHECK commands are add here so that every subsequent stage
+# is capable of running the application.
+#
+# https://docs.docker.com/develop/dev-best-practices/
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/
+#
+################################################################################
+# https://docs.docker.com/engine/reference/builder/#from
+FROM node:lts as build
+
+# -----------------------------------------------------------------------------
+# ARG
+# Declare/receive build arguments from command line.
+# Example: docker build --build-arg <key>=<value>
+# Only variables that are required when building the image(s) need to be declared build-arguments.
+# Build ARGs can affect behavior of base images, while ENV variables cannot.
+# https://docs.docker.com/engine/reference/builder/#arg
+# https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+# -----------------------------------------------------------------------------
+# ENV
+# Declare/receive environment variables.
+# Environment variables take precedence over build arguments.
+# The environment variables set using ENV will persist when a container is run from the resulting image.
+# You can view the values using docker inspect, and change them using docker run --env <key>=<value>.
+# Examples:
+#   docker run --env-file "./.env"
+#   docker run --env "<key>=<value>"
+#   docker run -e "<key>=<value>"
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#env
+# -----------------------------------------------------------------------------
+# ARG + ENV
+# The method exhibited below allows for the same variable to be set using
+# either; '--build-arg', '--env-file' or '--env' -- in that order.
+# ENVs, if provided, will always overwrite their ARG couterparts.
+# Setting variables in this way also ensures they are persisted throughout build and run.
+# -----------------------------------------------------------------------------
+# Set maintainer of the image, typically a support email address.
+ARG MAINTAINER
+ENV MAINTAINER "${MAINTAINER:-}"
+# Allow work directory to be set.
+# The default value is quasi-industry-standard; '/usr/src/app'.
+# Example: docker build --build-arg WORK_DIR=/app .
+ARG WORK_DIR
+ENV WORK_DIR "${WORK_DIR:-/usr/src/app}"
+# Enable docker-bench-security.
+# Example: docker build --build-arg SECURITY=true .
+ARG SECURITY
+ENV SECURITY "${SECURITY:-false}"
+# HOST/URL variables.
+ARG ENV
+ENV ENV "${ENV:-production}"
+ARG PORT
+ENV PORT "${PORT:-8000}"
+ARG PROTOCOL
+ENV PROTOCOL "${PROTOCOL:-http}"
+ARG DOMAIN
+ENV DOMAIN "${DOMAIN:-localhost}"
+ARG URL
+ENV URL "${URL:-${PROTOCOL}://${DOMAIN}:${PORT}}"
+ARG HEALTH_URL
+ENV HEALTH_URL "${HEALTH_URL:-${URL}/health}"
+# App info variables.
+ARG APP_OWNER
+ENV APP_OWNER "${APP_OWNER:-domain}"
+ARG APP_PARENT
+ENV APP_PARENT "${APP_PARENT:-subdomain}"
+ARG APP_NAME
+ENV APP_NAME "${APP_NAME:-app}"
+ARG APP_VERSION
+ENV APP_VERSION "${APP_VERSION:-1.0.0}"
+ARG APP_DESCRIPTION
+ENV APP_DESCRIPTION "${APP_DESCRIPTION:-}"
+# App source variables.
+ARG VCS_URL
+ENV VCS_URL "${VCS_URL:-}"
+ARG CI_URL
+ENV CI_URL "${CI_URL:-}"
+# Reverse-DNS Notation a.k.a. Uniform Type Identifier
+ARG ID
+ENV ID "${ID:-com.${APP_OWNER}.${APP_PARENT}.${APP_NAME}}"
+# Ensure Node binaries can be found in PATH.
+ENV PATH "$WORK_DIR/node_modules/.bin:$PATH"
+
+# -----------------------------------------------------------------------------
+# LABEL
+# You can add labels to your image to help organize images by project,
+# record licensing information, to aid in automation, or for other reasons.
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#label
+# -----------------------------------------------------------------------------
+LABEL \
+  # Prefix each label key with the ID, reverse-DNS notation, of primary domain.
+  # Do not use a domain in your label key without the domain owner's permission.
+  # https://docs.docker.com/config/#key-format-recommendations
+  "id"="${ID}" \
+  "maintainer"="${MAINTAINER}" \
+  "owner"="${APP_OWNER}" \
+  "parent"="${APP_PARENT}" \
+  "name"="${APP_NAME}" \
+  "version"="${APP_VERSION}" \
+  "description"="${APP_DESCRIPTION}" \
+  "url"="${URL}" \
+  "vcs"="${VCS_URL}" \
+  "ci"="${CI_URL}" \
+  "build_timestamp"="$(date +%s)"
+
+
+# -----------------------------------------------------------------------------
+# SHELL
+# The SHELL instruction allows the default shell used for the shell form of commands to be overridden.
+# The default shell on Linux is ["/bin/sh", "-c"],
+# https://docs.docker.com/engine/reference/builder/#shell
+# -----------------------------------------------------------------------------
+SHELL ["/bin/bash", "-c"]
+
+# -----------------------------------------------------------------------------
+# RUN
+# Only the instructions RUN, COPY, ADD create layers. Layers increase build complexity.
+# Other instructions create temporary intermediate images, and do not increase the size of the build.
+# Use ; to finish executing a command and a "trailing-backslash + line-return" organize each command on a separate line.
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#minimize-the-number-of-layers
+# -----------------------------------------------------------------------------
+RUN set -x \
+  && echo "BUILD STAGE started." \
+  \
+  # To reduce complexity, dependencies, file sizes, and build times,
+  # avoid installing extra or unnecessary packages just because they might be "nice to have".
+  && echo "Installing operating systems dependencies." \
+  # Using 'RUN apt-get update && apt-get install -y' ensures your Dockerfile installs the latest package versions
+  # with no further coding or manual intervention. This technique is known as "cache busting".
+  # The following commands must be chained together using && to avoid issues.
+  && apt-get update && apt-get install --no-install-recommends --no-install-suggests -yq \
+    curl \
+    git \
+    openssh-client \
+    openssh-server \
+    shellcheck \
+    tree \
+  \
+  && echo "Reduce image size; clean up the apt cache by removing '/var/lib/apt/lists'." \
+  && rm -rf /var/lib/apt/lists/* \
+  \
+  && echo "Installing global npm-based dependencies." \
+  && npm i -g --unsafe \
+    markdownlint-cli \
+    semver \
+  \
+  && echo "Reducing image size; cleaning up the npm cache." \
+  && npm cache clean -g -f < /dev/null 2> /dev/null \
+  \
+  && echo "Create and configure work directory." \
+  && mkdir -p "${WORK_DIR}" \
+  && ls -lahF --time-style=long-iso --color "${WORK_DIR}" \
+  ;
+
+# -----------------------------------------------------------------------------
+# WORKDIR
+# Set work directory. All subsquent commands are run from this directory.
+# -----------------------------------------------------------------------------
+WORKDIR "${WORK_DIR}"
+
+# -----------------------------------------------------------------------------
+# COPY
+# COPY is preferred, because it's more transparent than ADD.
+# The use-case for ADD is local tar file auto-extraction into the image, e.g.; ADD archive.tar.xz /.
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#add-or-copy
+# -----------------------------------------------------------------------------
+# If you have multiple Dockerfile steps that use different files from your context,
+# COPY them individually, rather than all at once.
+# This ensures that each step's build cache is only invalidated
+# (forcing the step to be re-run) if the specifically required files change.
+COPY package.json package-lock.json "${WORK_DIR}"/
+RUN npm install
+# This results in fewer cache invalidations for the RUN step.
+# So... if modification occurs in paths below, they will not affect cache of steps above.
+COPY . "${WORK_DIR}/"
+
+RUN set -x \
+  && echo "Confirm work directory contents." \
+  && ls -lahF --time-style=long-iso --color "${WORK_DIR}" \
+  \
+  && echo "Ensure writeable log files." \
+  && mkdir -p "${WORK_DIR}/logs" \
+  && touch \
+    "${WORK_DIR}/logs/error.log" \
+    "${WORK_DIR}/logs/out.log" \
+  && chmod -R 770 "${WORK_DIR}/logs" \
+  \
+  && echo "Ensure writeable coverage directory." \
+  && mkdir -p "${WORK_DIR}/coverage" \
+  && chmod -R 775 "${WORK_DIR}/coverage" \
+  \
+  && echo "Ensure entrypoints/binaries are executable." \
+  && if [[ -f "${WORK_DIR}/docker-entrypoint.sh" ]]; then chmod 755 "${WORK_DIR}/docker-entrypoint.sh"; fi \
+  && if [[ -f "${WORK_DIR}/docker-healthcheck" ]]; then chmod 755 "${WORK_DIR}/docker-healthcheck"; fi \
+  \
+  && echo "Confirm work directory contents." \
+  && ls -lahF --time-style=long-iso --color "${WORK_DIR}" \
+  \
+  && echo "Running ShellCheck analysis on all shell scripts." \
+  # && shellcheck \
+  #   ./*.sh \
+  #   ./**/*.sh \
+  #   ./bin/* \
+  #   ./cli \
+  #   ./run \
+  #   ./scripts/* \
+  #   ./scripts/aliases/* \
+  #   ./scripts/functions/* \
+  # \
+  && echo "Running Markdownlint analysis on Markdown files." \
+  && markdownlint -i '**/*.md' -i '**/node_modules/**' -i 'dist/' -c '.markdownlint.yaml' \
+  \
+  # && echo "Building the application." \
+  # && npm run build \
+  # \
+  && echo "BUILD STAGE complete." \
+  ;
+
+# -----------------------------------------------------------------------------
+# ENTRYPOINT
+# Set the image's main command, allowing that image to be run as though it was that command
+# (and then use CMD as the default flags).
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#entrypoint
+# -----------------------------------------------------------------------------
+# Ensure entrypoint can be found in PATH.
+# COPY --from=prepare $WORK_DIR/docker-entrypoint.sh /usr/local/bin/
+# Set entrypoint command.
+# ENTRYPOINT ["docker-entrypoint.sh"]
+
+# -----------------------------------------------------------------------------
+# EXPOSE
+# Indicates the ports on which a container listens for connections.
+# Use traditional ports for your application; Apache/Nginx=80, MongoDB=27017, etc.
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#expose
+# -----------------------------------------------------------------------------
+EXPOSE ${PORT:-8000}
+
+# -----------------------------------------------------------------------------
+# CMD
+# Used to run the software contained by the image, along with any arguments.
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#cmd
+# -----------------------------------------------------------------------------
+# This should be disabled when using ENTRYPOINT and there are no default flags passed to entrypoint.
+CMD ["node", "src/server.js"]
+
+# -----------------------------------------------------------------------------
+# HEALTHCHECK
+# Instruction tells Docker how to test a container to check that it is still working.
+# This can detect cases such as a web server that is stuck in an infinite loop and
+# unable to handle new connections, even though the server process is still running.
+# There can only be one HEALTHCHECK instruction in a Dockerfile.
+# https://docs.docker.com/engine/reference/builder/#healthcheck
+# -----------------------------------------------------------------------------
+HEALTHCHECK \
+  --interval=3m33s \
+  --timeout=9s \
+  --start-period=60s \
+  --retries=3 \
+  CMD \
+    curl -f "${HEALTH_URL:-http://localhost:8000/health}" || exit 1
+
+################################################################################
+################################################################################
+#
+# TEST STAGE(s)
+#
+# - Static Analysis, Linting and Style-checks for ALL file types; programming, scripting, docs.
+# - Static Analysis for Vulnerabilities, Bugs, Code Smells, Duplications, Lines-of-Code,Cyclomatic Complexity and Cognitive Complexity.
+# - Unit Tests for all lines of code and code paths.
+# - Integration and End-to-End Testing to ensure clients and users of application are not negatively impacted by any changes.
+# - Security White-Box Testing to ensure penetration tests can be run from local machines.
+# - Load Testing to determine application runtime limitations and plan for scalability requirements.
+#
+################################################################################
+FROM build as test
+
+RUN set -x \
+  && echo "TEST STAGE started." \
+  \
+  && echo "Testing the application." \
+  \
+  # && npm run test \
+  # \
+  && echo "TEST STAGE complete." \
+  ;
+
+
+################################################################################
+################################################################################
+#
+# REPORT STAGE(s)
+#
+# Run analysis scans, using tools like sonar-scanner,
+# and publish reports using SonarQube/SonarCloud, Coveralls, Codecov, etc.
+#
+################################################################################
+FROM test as report
+
+RUN set -x \
+  && echo "REPORT STAGE started." \
+  \
+  && echo "Running scans and publishing reports about the application." \
+  \
+  # && sonar-scanner \
+  # \
+  && echo "REPORT STAGE complete." \
+  ;
+
+# -----------------------------------------------------------------------------
+# SonarScanner CLI Docker image
+# https://github.com/sonarsource/sonar-scanner-cli-docker
+# -----------------------------------------------------------------------------
+# FROM sonarsource/sonar-scanner-cli as sonar
+
+# ENV WORK_DIR ${WORK_DIR:-/usr/src/app}
+# ENV SONAR_HOST_URL="${SONAR_HOST_URL:-https://sonarcloud.io}"
+# ENV SONAR_TOKEN="${SONAR_TOKEN:-}"
+# ENV SONAR_PROJECT_BASE_DIR="${WORK_DIR}"
+
+# WORKDIR "${WORK_DIR}"
+
+# COPY --from=report "${WORK_DIR}" "${WORK_DIR}"
+
+# RUN sonar-scanner
+
+
+################################################################################
+################################################################################
+#
+# PREPARE STAGE(s)
+#
+# Trim, truncate, harden, package.
+#
+################################################################################
+FROM build as prepare
+
+RUN set -x \
+  && echo "PREPARE STAGE started." \
+  \
+  && echo "Preparing app for runtime." \
+  \
+  && echo "Remove dependencies used for dev/building." \
+  && rm -Rf node_modules \
+  \
+  && echo "Install only dependencies required for runtime." \
+  && npm install --only=prod \
+  \
+  && echo "Clean all caches." \
+  && npm cache clean -f < /dev/null 2> /dev/null \
+  \
+  && echo "Confirm work directory contents." \
+  && ls -lahF --time-style=long-iso --color "${WORK_DIR}" \
+  \
+  && echo "PREPARE STAGE complete." \
+  ;
+
+
+################################################################################
+################################################################################
+#
+# RUN STAGE
+#
+################################################################################
+FROM node:lts-alpine as run
+
+# Set maintainer of the image, typically a support email address.
+ARG MAINTAINER
+ENV MAINTAINER "${MAINTAINER:-}"
+# Allow work directory to be set via CLI argument.
+# Example: docker build --build-arg WORK_DIR=/app .
+ARG WORK_DIR
+ENV WORK_DIR "${WORK_DIR:-/usr/src/app}"
+# Enable docker-bench-security.
+# Example: docker build --build-arg SECURITY=true .
+ARG SECURITY
+ENV SECURITY "${SECURITY:-false}"
+# HOST/URL variables.
+ARG ENV
+ENV ENV "${ENV:-production}"
+ARG PORT
+ENV PORT "${PORT:-8000}"
+ARG PROTOCOL
+ENV PROTOCOL "${PROTOCOL:-http}"
+ARG DOMAIN
+ENV DOMAIN "${DOMAIN:-localhost}"
+ARG URL
+ENV URL "${PROTOCOL:-http}://${DOMAIN:-localhost}:${PORT:-8000}"
+ARG HEALTH_URL
+ENV HEALTH_URL "${HEALTH_URL:-${URL}/health}"
+# App info variables.
+ARG APP_OWNER
+ENV APP_OWNER "${APP_OWNER:-domain}"
+ARG APP_PARENT
+ENV APP_PARENT "${APP_PARENT:-subdomain}"
+ARG APP_NAME
+ENV APP_NAME "${APP_NAME:-app}"
+ARG APP_VERSION
+ENV APP_VERSION "${APP_VERSION:-1.0.0}"
+ARG APP_DESCRIPTION
+ENV APP_DESCRIPTION "${APP_DESCRIPTION:-}"
+# App source variables.
+ARG VCS_URL
+ENV VCS_URL "${VCS_URL:-}"
+ARG CI_URL
+ENV CI_URL "${CI_URL:-}"
+# Reverse-DNS Notation a.k.a. Uniform Type Identifier
+ARG ID
+ENV ID "${ID:-com.${APP_OWNER}.${APP_PARENT}.${APP_NAME}}"
+# Ensure Node binaries can be found in PATH.
+ENV PATH "$WORK_DIR/node_modules/.bin:$PATH"
+
+LABEL \
+  "id"="${ID}" \
+  "maintainer"="${MAINTAINER}" \
+  "owner"="${APP_OWNER}" \
+  "parent"="${APP_PARENT}" \
+  "name"="${APP_NAME}" \
+  "version"="${APP_VERSION}" \
+  "description"="${APP_DESCRIPTION}" \
+  "url"="${URL}" \
+  "vcs"="${VCS_URL}" \
+  "ci"="${CI_URL}" \
+  "build_timestamp"="$(date +%s)"
+
+# Run installs and prep.
+RUN set -x \
+  && echo "RUN STAGE started." \
+  \
+  && echo "Installing runtime dependencies." \
+  && apk update && apk add --no-cache --update \
+    bash \
+    curl \
+    git \
+  && echo "Done installing runtime dependencies." \
+  \
+  && echo "Installing global npm-based dependencies." \
+  && npm i -g --unsafe \
+    nodemon \
+  \
+  && echo "Reducing image size; cleaning up the npm cache." \
+  && npm cache clean -g -f < /dev/null 2> /dev/null \
+  \
+  && mkdir -p "${WORK_DIR}" \
+  \
+  && echo "Done with prep." \
+  ;
+
+# Set work directory.
+WORKDIR "${WORK_DIR}"
+
+# When using multi-stage builds; only copy the artifacts you need into the final image.
+# This allows you to use build stages without increasing the size of the final image.
+
+# Copy app directories.
+COPY --from=prepare "${WORK_DIR}/dist" "${WORK_DIR}/dist"
+COPY --from=prepare "${WORK_DIR}/logs" "${WORK_DIR}/logs"
+COPY --from=prepare "${WORK_DIR}/node_modules" "${WORK_DIR}/node_modules"
+COPY --from=prepare "${WORK_DIR}/public" "${WORK_DIR}/public"
+# Copy app files.
+COPY --from=prepare \
+  "${WORK_DIR}/docker-entrypoint.sh" \
+  "${WORK_DIR}/docker-healthcheck" \
+  "${WORK_DIR}/package-lock.json" \
+  "${WORK_DIR}/package.json" \
+  "${WORK_DIR}"/
+
+RUN set -x \
+  && echo "Debugging and final testing before runtime." \
+  \
+  && ls -lahF --time-style=long-iso --color "${WORK_DIR}" \
+  \
+  # The Docker Bench for Security is a script that checks for dozens of
+  # common best-practices around deploying Docker containers in production.
+  # https://github.com/docker/docker-bench-security
+  # && echo "Running Docker Bench for Security." \
+  # && git clone --depth=1 https://github.com/docker/docker-bench-security.git \
+  # && cd docker-bench-security \
+  # && sudo sh docker-bench-security.sh \
+  # \
+  && echo "RUN STAGE complete." \
+  ;
+
+# -----------------------------------------------------------------------------
+# EXPOSE
+# Expose the application via PORT.
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#expose
+# -----------------------------------------------------------------------------
+EXPOSE ${PORT:-8000}
+
+# -----------------------------------------------------------------------------
+# ENTRYPOINT
+# Set the image's main command, allowing that image to be run as though it was that command
+# (and then use CMD as the default flags).
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#entrypoint
+# -----------------------------------------------------------------------------
+# Ensure entrypoint can be found in PATH.
+# COPY --from=prepare $WORK_DIR/docker-entrypoint.sh /usr/local/bin/
+# Set entrypoint command.
+# ENTRYPOINT ["docker-entrypoint.sh"]
+
+# -----------------------------------------------------------------------------
+# CMD
+# Used to run the software contained by the image, along with any arguments.
+# https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#cmd
+# -----------------------------------------------------------------------------
+# This should be disabled when using ENTRYPOINT and there are no default flags passed to entrypoint.
+CMD ["node", "dist/server.js"]
+
+# -----------------------------------------------------------------------------
+# HEALTHCHECK
+# Instruction tells Docker how to test a container to check that it is still working.
+# This can detect cases such as a web server that is stuck in an infinite loop and
+# unable to handle new connections, even though the server process is still running.
+# There can only be one HEALTHCHECK instruction in a Dockerfile.
+# https://docs.docker.com/engine/reference/builder/#healthcheck
+# -----------------------------------------------------------------------------
+HEALTHCHECK \
+  --interval=3m33s \
+  --timeout=9s \
+  --start-period=60s \
+  --retries=3 \
+  CMD \
+    curl -f "${HEALTH_URL:-http://localhost:8000/health}" || exit 1

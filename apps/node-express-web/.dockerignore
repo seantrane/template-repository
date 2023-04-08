@@ -1,0 +1,11 @@
+# .env.*
+.dockerignore
+.editorconfig
+.git
+.travis.yml
+*.md
+Dockerfile
+Dockerfile.*
+docs
+logs
+node_modules

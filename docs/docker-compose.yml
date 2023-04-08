@@ -1,0 +1,23 @@
+version: '3'
+services:
+  jekyll:
+    image: jekyll/jekyll:3.8
+    container_name: template-repository
+    env_file:
+      - ./.env
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./:/srv/jekyll:Z
+      - ./vendor/bundle:/usr/local/bundle:Z
+      - ./vendor/gem-cache:/usr/gem/cache/bundle:Z
+    command: jekyll serve --watch --force_polling -H 0.0.0.0 -P 4000
+    tty: true
+    labels:
+      com.template-repository.website.description: "template-repository"
+      com.template-repository.website.domain: "template-repository"
+      com.template-repository.website.owner: "@seantrane"
+      com.template-repository.website.creator: "@seantrane"
+      com.template-repository.website.origin: "https://github.com/seantrane/template-repository"
+      com.template-repository.website.support: "https://github.com/seantrane/template-repository/#readme"
+      com.template-repository.website.issues: "https://github.com/seantrane/template-repository/issues"

@@ -1,0 +1,41 @@
+{
+  "name": "node-express-web",
+  "version": "1.0.0",
+  "description": "Sample application.",
+  "author": "@seantrane",
+  "license": "ISC",
+  "repository": "github:seantrane/template-repository",
+  "main": "server.js",
+  "directories": {
+    "dist": "lib",
+    "lib": "lib",
+    "output": "coverage",
+    "src": "src",
+    "test": "__tests__"
+  },
+  "files": [
+    "server.js",
+    "lib"
+  ],
+  "scripts": {
+    "build": "echo \"No build necessary.\"",
+    "start": "node server.js",
+    "test": "echo \"No test specified.\""
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.4",
+    "debug": "^4.1.1",
+    "express": "^4.17.1",
+    "express-rate-limit": "^5.0.0",
+    "helmet": "^3.21.2",
+    "lodash": "^4.17.15",
+    "mongoose": "^5.8.7",
+    "morgan": "^1.9.1",
+    "redis": "^2.8.0",
+    "rotating-file-stream": "^2.0.1",
+    "serve-static": "^1.14.1",
+    "wait-on": "^3.3.0"
+  }
+}
