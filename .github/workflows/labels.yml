@@ -9,6 +9,7 @@ on:
     paths:
       - .github/labels.json
       - .github/labels.yml
+      - .github/workflows/labels.yml
   workflow_dispatch:
 
 permissions:
