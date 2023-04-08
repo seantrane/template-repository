@@ -10,30 +10,30 @@ on:
       - .github/labels.yml
 
 jobs:
-  labels:
-    # https://github.com/marketplace/actions/issue-label-manager-action
-    name: Label Manager
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: lannonbr/issue-label-manager-action@4.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # with:
-        #   delete: true # will delete any labels that aren't in the .github/labels.json (this is set to false by default)
-
-  # labelsync:
-  #   # https://github.com/micnncim/action-label-syncer
-  #   # https://github.com/micnncim/action-label-syncer/pull/68
-  #   name: Label Sync
+  # labels:
+  #   # https://github.com/marketplace/actions/issue-label-manager-action
+  #   name: Label Manager
   #   runs-on: ubuntu-latest
   #   steps:
   #     - uses: actions/checkout@v3
-  #     - uses: micnncim/action-label-syncer@v1
+  #     - uses: lannonbr/issue-label-manager-action@4.0.0
   #       env:
   #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         manifest: .github/labels.yml
-  #         # repository: |
-  #         #     owner/repository-1
-  #         #     owner/repository-2
+  #       # with:
+  #       #   delete: true # will delete any labels that aren't in the .github/labels.json (this is set to false by default)
+
+  labelsync:
+    # https://github.com/micnncim/action-label-syncer
+    # https://github.com/micnncim/action-label-syncer/pull/68
+    name: Label Sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: micnncim/action-label-syncer@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          manifest: .github/labels.yml
+          # repository: |
+          #     owner/repository-1
+          #     owner/repository-2
