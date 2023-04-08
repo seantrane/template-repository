@@ -2,12 +2,13 @@
 name: "Maintain Repository Labels"
 
 on:
-  issues:
-    types: [opened, edited, reopened, labeled, unlabeled]
   label:
     types: [created, edited, deleted]
   push:
     branches: [master, main]
+    paths:
+      - .github/labels.json
+      - .github/labels.yml
   workflow_dispatch:
 
 permissions:
