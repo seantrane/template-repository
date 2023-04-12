@@ -1,6 +1,11 @@
-version: '3.5'
+version: '3.9'
 # https://docs.docker.com/compose/compose-file/
 # https://docs.docker.com/compose/reference/overview/
+
+networks:
+  frontend:
+  backend:
+
 services:
 
   # ----------------------------------------------------------------------------
@@ -329,7 +334,3 @@ services:
   #   networks:
   #     — frontend
   #     — backend
-
-networks:
-  frontend:
-  backend:
