@@ -137,6 +137,37 @@ git clone git@github.com:seantrane/template-repository.git template-repository &
 
 ```text
 template-repository/
+├─ .github/                                    * Repository configuration directory
+│  ├─ ISSUE_TEMPLATE/                          * Templates available when creating an issue
+│  │  ├─ issue_template.sh                     * Default issue template
+│  │  ├─ [name]_template.sh                    * An issue template
+│  │  :
+│  │
+│  ├─ linters/                                 * Directory for linter configuration files
+│  │  ├─ .markdown-lint.yml                    * Markdown-lint config
+│  │  ├─ .sass-lint.yml                        * SASS-lint config
+│  │  ├─ .tflint.hcl                           * Terraform-lint config
+│  │  ├─ .yaml-lint.yml                        * YAML-lint config
+│  │  :
+│  │
+│  ├─ PULL_REQUEST_TEMPLATE/                   * Templates available when creating a pull request
+│  │  ├─ pull_request_template.sh              * Default pull request template
+│  │  ├─ [name]_template.sh                    * A pull request template
+│  │  :
+│  │
+│  ├─ workflows/                               * Directory for GitHub Actions Workflows
+│  │  ├─ delivery.yml                          * Continuous Delivery Workflow
+│  │  ├─ deployment.yml                        * Continuous Deployment Workflow
+│  │  ├─ integration.yml                       * Continuous Integration Workflow
+│  │  ├─ maintenance.yml                       * Maintenance Workflow
+│  │  :
+│  │
+|  ├─ dependabot.yml                           * Dependabot config
+|  ├─ labels.json                              * GitHub Labels config
+|  ├─ reaction.yml                             * action-reaction config
+|  ├─ stale.yml                                * action-stale config
+|  └─ super-linter.env                         * Shell support tests
+│
 ├─ apps/                                       * apps directory
 │  ├─ <app>/                                   * <App> directory
 │  :  ├─ lib/                                  * <App> dist/lib directory
@@ -147,10 +178,41 @@ template-repository/
 │     ├─ docker-entrypoint.sh                  * Docker entrypoint scripting
 │     ├─ docker-healthcheck                    * Docker healthcheck scripting
 │     ├─ index.js                              * node module main-entrypoint
+│     ├─ run                                   * Shell script endpoint for running app scripts
 │     ├─ Dockerfile                            * Docker (multi-stage) config
 │     ├─ package-lock.json                     * <App> package dependency lock file
 │     ├─ package.json                          * <App> package config
 │     └─ README.md                             * <App> readme
+│
+├─ bin/                                        * Shell binaries directory
+│  └─ [function_name]                          * Shell binaries (typically mapped to respective functions)
+│
+├─ docs/                                       * docs directory (for static site generation with Jekyll)
+│  ├─ _data/                                   * YAML-based data files
+│  ├─ _drafts/                                 * directory for unpublished content
+│  ├─ _includes/                               * view partials used by layouts, posts, etc.
+│  ├─ _layouts/                                * templates that wrap posts, pages, etc.
+│  ├─ _posts/                                  * dynamic content
+│  ├─ _sass/                                   * SASS style sheets
+│  │
+│  ├─ css/                                     * static assets directory for style sheets
+│  ├─ fonts/                                   * static assets directory for web fonts
+│  ├─ images/                                  * static assets directory for images
+│  │
+│  ├─ .env.example                             * example .env file
+│  ├─ _config.yml                              * Jekyll configuration file
+│  ├─ docker-compose.yml                       * Docker Compose configuration for local development/testing
+│  ├─ Gemfile                                  * Bundler configuration file for Jekyll dependencies
+│  ├─ Gemfile.lock                             * Bundler configuration lock file for Jekyll dependencies
+│  └─ index.html                               * Docs homepage
+│
+├─ scripts/                                    * shell scripts directory
+│  ├─ functions/                               * Shell functions directory
+│  │  ├─ [function_name].sh                    * Shell function (with filename identical to function name)
+│  │  :
+│  │
+|  ├─ load_functions.sh                        * Shell functions (loads all `./scripts/functions/*`)
+|  └─ test.sh                                  * Shell support tests
 │
 ├─ services/                                   * services directory
 │  ├─ <service>/                               * <Service> directory
@@ -162,13 +224,13 @@ template-repository/
 ├─ .editorconfig                               * keep developers/IDE's in sync
 ├─ .env.example                                * environment configuration variables template
 ├─ .gitignore                                  * ignore files for git
-├─ .markdownlint.yaml                          * Markdown lint rules and config
-├─ CHANGLOG.md                                 * changelog autogenerated by `@semantic-release/changelog`
+├─ CHANGELOG.md                                * changelog autogenerated by `@semantic-release/changelog`
 ├─ CODE_OF_CONDUCT.md                          * Code of conduct policy
 ├─ CODEOWNERS                                  * default pull-request reviewers
 ├─ CONTRIBUTING.md                             * contributing guidelines
 ├─ docker-compose.yml                          * Docker-compose config
 ├─ README.md                                   * repository readme
+├─ run                                         * Shell script endpoint for running repo shell functions, binaries
 ├─ sonar-project.properties                    * SonarQube/SonarCloud configuration
 └─ STYLE_GUIDES.md                             * Style guides, standards and practices
 ```
