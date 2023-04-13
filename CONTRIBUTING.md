@@ -33,8 +33,6 @@ Please read and follow our [code of conduct](CODE_OF_CONDUCT.md).
 
 ---
 
----
-
 ## How can I contribute? <a id="how-can-i-contribute"></a>
 
 ### Improve documentation <a id="improve-documentation"></a>
@@ -47,23 +45,23 @@ Please follow the [Documentation guidelines](STYLE_GUIDES.md#documentation).
 
 Some issues are created without information requested in the [Bug report guideline](#bug-report). Help making them easier to resolve by adding any relevant information.
 
-Issues with the [design label](https://github.com/issues?q=is%3Aopen+is%3Aissue+user%3Aseantrane+archived%3Afalse+label%3Adesign) are meant to discuss the implementation of new features. Participating in the discussion is a good opportunity to get involved and influence the future.
+Issues with the [`type: discussion` label](https://github.com/seantrane/template-repository/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3A+discussion) are meant to discuss the implementation of new features. Participating in the discussion is a good opportunity to get involved and influence the future.
 
 ### Fix bugs and implement features <a id=""></a>
 
-Confirmed bug and ready to implement features are marked with the [help wanted label](https://github.com/issues?utf8=%E2%9C%93&q=is%3Aopen+is%3Aissue+user%3Aseantrane+archived%3Afalse+label%3A%22help+wanted%22). Post a comment on an issue to indicate you would like to work on it and to request help from the [@seantrane/technology](https://github.com/orgs/seantrane/teams/technology) team and the community.
+Confirmed bug and ready to implement features are marked with the [`help` label](https://github.com/seantrane/template-repository/issues?q=is%3Aissue+is%3Aopen+label%3Ahelp). Post a comment on an issue to indicate you would like to work on it and to request help from the team and the community.
 
 ---
 
 ## Using the issue tracker <a id="using-the-issue-tracker"></a>
 
-The issue tracker is the channel for [bug reports](#bug-report), [features requests](#feature-request) and [submitting pull requests](#submitting-a-pull-request) only. Please use the [Support](docs/support/README.md) and [Get help](README.md#get-help) sections for support, troubleshooting and questions.
+The issue tracker is the channel for [bug reports](#bug-report), [features requests](#feature-request) and [submitting pull requests](#submitting-a-pull-request) only. Please use the [Support](README.md#support) and [Get help](README.md#get-help) sections for support, troubleshooting and questions.
 
-Before opening an Issue or a Pull Request, please use the [GitHub issue search](https://github.com/issues?utf8=%E2%9C%93&q=user%3Aseantrane) to make the bug or feature request hasn't been already reported or fixed.
+Before opening an Issue or a Pull Request, please use the [GitHub issue search](https://github.com/seantrane/template-repository/issues?q=) to make the bug or feature request hasn't been [already reported](https://github.com/seantrane/template-repository/issues?q=is%3Aopen+) or [fixed](https://github.com/seantrane/template-repository/issues?q=reason%3Acompleted).
 
 ### Bug report <a id="bug-report"></a>
 
-A good bug report shouldn't leave others needing to chase you up for more information. Please try to be as detailed as possible in your report and fill the information requested in the _[Bug/Issue Template](ISSUE_TEMPLATE.md)_.
+A good bug report shouldn't leave others needing to chase you up for more information. Please try to be as detailed as possible in your report and fill the information requested in the _[Bug/Issue Template](.github/ISSUE_TEMPLATE/issue_template.md)_.
 
 ### Feature request <a id="feature-request"></a>
 
@@ -90,17 +88,17 @@ Here is a summary of the steps to follow:
 
 **Tips**:
 
-- Create your branch from `master`.
-- Ensure your [git commit messages follow the required format](https://github.com/seantrane/engineering/blob/master/STYLE_GUIDES.md#git-commit-messages).
+- Create your branch from `main`.
+- Ensure your [git commit messages follow the required format](STYLE_GUIDES.md#git-commit-messages).
 - Ensure your scripts are well-formed, well-documented and object-oriented.
 - Ensure your scripts are stateless and can be reused by all.
 - Update your branch, and resolve any conflicts, before making pull request.
-- Fill in [the required template](https://github.com/seantrane/engineering/blob/master/PULL_REQUEST_TEMPLATE.md).
+- Fill in [the PR template](.github/PULL_REQUEST_TEMPLATE/pull_request_template.md).
 - Do not include issue numbers in the PR title.
 - Include screenshots and animated GIFs in your pull request whenever possible.
-- Follow the [style guide](https://github.com/seantrane/engineering/blob/master/STYLE_GUIDES.md) [applicable to the language](https://github.com/seantrane/engineering/blob/master/STYLE_GUIDES.md#languages) or task.
-- Include thoughtfully-worded, well-structured tests/specs. See the [Tests/Specs Style Guide](https://github.com/seantrane/engineering/blob/master/STYLE_GUIDES.md#tests).
-- Document new code based on the [Documentation Style Guide](https://github.com/seantrane/engineering/blob/master/STYLE_GUIDES.md#documentation).
+- Follow the [style guide](STYLE_GUIDES.md) [applicable to the language](STYLE_GUIDES.md#languages) or task.
+- Include thoughtfully-worded, well-structured tests/specs. See the [Tests/Specs Style Guide](STYLE_GUIDES.md#tests).
+- Document new code based on the [Documentation Style Guide](STYLE_GUIDES.md#documentation).
 - End all files with a newline.
 
 ---

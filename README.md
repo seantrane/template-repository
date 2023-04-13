@@ -51,16 +51,16 @@ docker-compose down
 
 ## Contributing <a id="contributing"></a>
 
-Contributions are always appreciated. Read [CONTRIBUTING.md](https://github.com/seantrane/template-repository/blob/master/CONTRIBUTING.md) documentation to learn more.
+Contributions are always appreciated. Read [CONTRIBUTING.md](https://github.com/seantrane/template-repository/blob/main/CONTRIBUTING.md) documentation to learn more.
 
 ## Changelog <a id="changelog"></a>
 
-Release details are documented in the [CHANGELOG.md](https://github.com/seantrane/template-repository/blob/master/CHANGELOG.md) file, and on the [GitHub Releases page](https://github.com/seantrane/template-repository/releases).
+Release details are documented in the [CHANGELOG.md](https://github.com/seantrane/template-repository/blob/main/CHANGELOG.md) file, and on the [GitHub Releases page](https://github.com/seantrane/template-repository/releases).
 
 ---
 
 ## License <a id="license"></a>
 
-[ISC License](https://github.com/seantrane/template-repository/blob/master/LICENSE)
+[ISC License](https://github.com/seantrane/template-repository/blob/main/LICENSE)
 
 Copyright (c) 2020 [Sean Trane Sciarrone](https://github.com/seantrane)
