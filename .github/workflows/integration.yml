@@ -28,16 +28,14 @@ jobs:
     uses: seantrane/engineering/.github/workflows/linter.yml@main
 
   terraform:
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         paths:
           - './terraform/deployments/dev'
           - './terraform/deployments/stage'
           - './terraform/deployments/prod'
-    steps:
-      - uses: seantrane/engineering/.github/workflows/terraform.yml@main
-        with:
-          version: 1.4.4
-          working-directory: ${{ matrix.paths }}
-          # apply: false
+    uses: seantrane/engineering/.github/workflows/terraform.yml@main
+    with:
+      version: 1.4.4
+      working-directory: ${{ matrix.paths }}
+      apply: false
