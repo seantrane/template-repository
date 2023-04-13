@@ -32,8 +32,8 @@ jobs:
       matrix:
         working-directory:
           - 'terraform/deployments/dev'
-          - '../terraform/deployments/stage'
-          - '../../terraform/deployments/prod'
+          - 'terraform/deployments/stage'
+          - 'terraform/deployments/prod'
     uses: seantrane/engineering/.github/workflows/terraform.yml@main
     with:
       version: 1.4.4
